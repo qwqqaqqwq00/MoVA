@@ -30,7 +30,7 @@ def resize_image_embeddings(model, size):
     return model
 
 
-class Pix2StructImageProcessorWarp(Pix2StructImageProcessor):
+class Pix2StructImageProcessorWrapper(Pix2StructImageProcessor):
     def preprocess(self, *args, **kwargs):
         result = super().preprocess(*args, **kwargs)
         result["pixel_values"] = result["flattened_patches"]
@@ -89,10 +89,11 @@ class MoVAVisionTower(nn.Module):
         self.vision_tower_3 = build_codetr_vit_l(checkpoint=self.vision_tower_names[3] if os.path.exists(self.vision_tower_names[3]) else None)
 
         self.vision_tower_4 = Pix2StructForConditionalGeneration.from_pretrained(self.vision_tower_names[4]).get_encoder()
-        self.image_processor_4 = Pix2StructImageProcessorWarp.from_pretrained(self.vision_tower_names[4])
+        self.image_processor_4 = Pix2StructImageProcessorWrapper.from_pretrained(self.vision_tower_names[4])
         self.image_processor_4.is_vqa = False
         self.image_processor_4.crop_size = {"height": 45, "width": 45}
         self.image_processor_4.image_mean = [0.48145466, 0.4578275, 0.40821073]
+        self.image_processor_4.max_patches = 2025
 
 
         self.vision_tower_5 = Pix2StructForConditionalGeneration.from_pretrained(self.vision_tower_names[5]).get_encoder()
