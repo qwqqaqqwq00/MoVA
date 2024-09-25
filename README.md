@@ -6,6 +6,7 @@ Official repository for the paper "MoVA: Adapting Mixture of Vision Experts to M
 
 ## 💥 News
 
+- **[2024.09.26]** 🎉 MoVA is accepted to NeurIPS 2024 🎉 
 - **[2024.06.28]** 🔥 We release the codes and the MoVA-8B model.
 - **[2024.04.22]** 🚀 We release our paper on arXiv.
 
