@@ -785,7 +785,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                 data_collator=data_collator)
 
 
-def train(attn_implementation=None):
+def train(use_flash_attention_2=None):
     global local_rank
 
     parser = transformers.HfArgumentParser(
@@ -827,7 +827,7 @@ def train(attn_implementation=None):
             model = MovaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 cache_dir=training_args.cache_dir,
-                attn_implementation=attn_implementation,
+                use_flash_attention_2=use_flash_attention_2,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
                 **bnb_model_from_pretrained_args
             )
@@ -835,7 +835,7 @@ def train(attn_implementation=None):
         model = transformers.LlamaForCausalLM.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
-            attn_implementation=attn_implementation,
+            use_flash_attention_2=use_flash_attention_2,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             **bnb_model_from_pretrained_args
         )
