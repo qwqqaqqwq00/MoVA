@@ -43,7 +43,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         kwargs['torch_dtype'] = torch.bfloat16
 
     if use_flash_attn:
-        kwargs['attn_implementation'] = 'flash_attention_2'
+        kwargs['use_flash_attention_2'] = True
 
     if 'mova' in model_name.lower():
         # Load MoVA model

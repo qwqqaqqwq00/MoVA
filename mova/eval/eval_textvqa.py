@@ -35,20 +35,25 @@ def prompt_processor(prompt):
 def eval_single(annotation_file, result_file):
     experiment_name = os.path.splitext(os.path.basename(result_file))[0]
     print(experiment_name)
-    annotations = json.load(open(annotation_file))['data']
-    annotations = {(annotation['image_id'], annotation['question'].lower()): annotation for annotation in annotations}
+    with open(annotation_file, 'r') as f:
+        annotations = json.load(f)
+    # annotations = json.load(open(annotation_file))['data']
+    # annotations = {annotation['question_id']: annotation for annotation in annotations}
     results = [json.loads(line) for line in open(result_file)]
-
+    # with open(result_file, 'r') as f:
+    #     results = json.load(f)
+    
     pred_list = []
-    for result in results:
-        annotation = annotations[(result['question_id'], prompt_processor(result['prompt']))]
+    for annotation, result in zip(annotations, results):
+        # annotation = annotations[result['question_id']]
         pred_list.append({
             "pred_answer": result['text'],
-            "gt_answers": annotation['answers'],
+            "gt_answers": annotation['answer'],
         })
-
-    evaluator = TextVQAAccuracyEvaluator()
-    print('Samples: {}\nAccuracy: {:.2f}%\n'.format(len(pred_list), 100. * evaluator.eval_pred_list(pred_list)))
+    accs = [1 if a['pred_answer'] == a['gt_answers'] else 0 for a in pred_list]
+    print('Samples: {}\nAccuracy: {:.2f}%\n'.format(len(pred_list), 100. * sum(accs)/len(accs)))
+    # evaluator = TextVQAAccuracyEvaluator()
+    # print('Samples: {}\nAccuracy: {:.2f}%\n'.format(len(pred_list), 100. * evaluator.eval_pred_list(pred_list)))
 
 
 if __name__ == "__main__":

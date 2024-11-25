@@ -5,6 +5,7 @@ import json
 from tqdm import tqdm
 import shortuuid
 
+from peft import PeftModel
 from mova.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, ROUTING_PROMPT
 from mova.conversation import conv_templates, SeparatorStyle
 from mova.model.builder import load_pretrained_model
@@ -53,22 +54,26 @@ def eval_model(args):
     model_path = os.path.expanduser(args.model_path)
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, args.model_base, model_name)
-
+    assert(image_processor != None)
+    # print(image_processor)
     questions = json.load(open(os.path.expanduser(args.question_file), "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
     answers_file = os.path.expanduser(args.answers_file)
     os.makedirs(os.path.dirname(answers_file), exist_ok=True)
     ans_file = open(answers_file, "w")
     for i, line in enumerate(tqdm(questions)):
-        idx = line["id"]
-        question = line['conversations'][0]
-        qs = question['value'].replace('<image>', '').strip()
+        # idx = line["id"]
+        idx = line['question_id']
+        question = line['text']
+        # question = line['conversations'][0]
+        qs = question.replace('<image>','').strip()
+        # qs = question['value'].replace('<image>', '').strip()
         cur_prompt = qs
         routing_qs = copy.deepcopy(ROUTING_PROMPT) + qs
-
         if 'image' in line:
             image_file = line["image"]
             image = Image.open(os.path.join(args.image_folder, image_file))
+            assert(image != None)
             if isinstance(image_processor, list):
                 image_tensor_0 = process_images(
                     [image], image_processor[0], model.config
@@ -124,11 +129,13 @@ def eval_model(args):
         routing_weight_tensor = torch.Tensor([0]*7).cuda().bfloat16().unsqueeze(0)
 
         # Obtain base vision feature
-        cached_features = model.update_cached_features(
-            image_tensor, 
-            high_image_tensor, 
-            flattened_image_tensor, 
-            routing_weights=routing_weight_tensor)
+        # print(image_sizes)
+        # model: PeftModel = model
+        # cached_features = model.update_cached_features(
+        #     image_tensor, 
+        #     high_image_tensor, 
+        #     flattened_image_tensor, 
+        #     routing_weights=routing_weight_tensor)
         with torch.inference_mode():
             output_ids = model.generate(
                 routing_input_ids,
@@ -136,14 +143,14 @@ def eval_model(args):
                 high_images=high_image_tensor,
                 flattened_patches=flattened_image_tensor,
                 routing_weights=routing_weight_tensor,
-                cached_features=cached_features,
+                # cached_features=cached_features,
                 prompts=prompts,                
                 has_routing=[True],
                 image_sizes=image_sizes,
                 do_sample=True if args.temperature > 0 else False,
                 temperature=args.temperature,
-                top_p=args.top_p,
-                num_beams=args.num_beams,
+                # top_p=args.top_p,
+                # num_beams=args.num_beams,
                 max_new_tokens=16,
                 eos_token_id=tokenizer.eos_token_id,
                 use_cache=True)
@@ -151,12 +158,12 @@ def eval_model(args):
         routing_weight_tensor = get_routing_weights(outputs).cuda().bfloat16()
 
         # Update vision feature
-        cached_features = model.update_cached_features(
-            image_tensor, 
-            high_image_tensor, 
-            flattened_image_tensor, 
-            routing_weights=routing_weight_tensor,
-            cached_features=cached_features)                                
+        # cached_features = model.update_cached_features(
+        #     image_tensor, 
+        #     high_image_tensor, 
+        #     flattened_image_tensor, 
+        #     routing_weights=routing_weight_tensor,
+        #     cached_features=cached_features)                                
         with torch.inference_mode():
             output_ids = model.generate(
                 input_ids,
@@ -164,7 +171,7 @@ def eval_model(args):
                 high_images=high_image_tensor,
                 flattened_patches=flattened_image_tensor,
                 routing_weights=routing_weight_tensor,
-                cached_features=cached_features,
+                # cached_features=cached_features,
                 prompts=prompts,                
                 image_sizes=image_sizes,
                 do_sample=True if args.temperature > 0 else False,

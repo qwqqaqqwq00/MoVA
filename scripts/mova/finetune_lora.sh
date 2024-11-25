@@ -6,7 +6,7 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port 29600 mova/train/tra
     --model_name_or_path ../CoIN/checkpoints/LLaVA/Vicuna/vicuna-7b-v1.5 \
     --version v1 \
     --data_path ../CoIN/playground/Instructions_Original/ScienceQA/train.json \
-    --image_folder ./DatasetCoIN \
+    --image_folder ../DatasetCoIN \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --pretrain_mm_mlp_adapter ../CoIN/checkpoints/LLaVA/Vicuna/vicuna-7b-v.15-projector/mm_projector.bin \
     --mm_projector_type mlp2x_gelu \
