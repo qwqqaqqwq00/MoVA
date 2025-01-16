@@ -1,7 +1,9 @@
 import os
 import argparse
 import json
-
+import sys
+sys.path = [path for path in sys.path if '/root/MoVA/scripts/mova/eval' not in path]  # 移除错误路径
+sys.path.insert(0, '/root/MoVA')
 from mova.eval.m4c_evaluator import EvalAIAnswerProcessor
 
 
@@ -17,7 +19,7 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    src = os.path.join(args.dir, 'answers', args.split, args.ckpt, 'merge.jsonl')
+    src = os.path.join(args.dir, args.split, args.ckpt, 'merge.jsonl')
     test_split = "../CoIN/playground/Instructions_Original/VQAv2/val.json"
     dst = os.path.join(args.dir, 'answers_upload', args.split, f'{args.ckpt}.json')
     os.makedirs(os.path.dirname(dst), exist_ok=True)
@@ -31,7 +33,10 @@ if __name__ == '__main__':
             error_line += 1
 
     results = {x['question_id']: x['text'] for x in results}
-    test_split = [json.loads(line) for line in open(test_split)]
+    if test_split.endswith('.jsonl'):
+        test_split = [json.loads(line) for line in open(test_split)]
+    else:
+        test_split = json.load(open(test_split))
     split_ids = set([x['question_id'] for x in test_split])
 
     print(f'total results: {len(results)}, total split: {len(test_split)}, error_line: {error_line}')
@@ -51,6 +56,9 @@ if __name__ == '__main__':
                 'question_id': x['question_id'],
                 'answer': answer_processor(results[x['question_id']])
             })
-
+    accs = []
+    for gt, pred in zip(test_split, all_answers):
+        accs.append(1 if gt['answer']==pred['answer'] else 0)
+    print(f"Acc: {sum(accs)/len(accs)}")
     with open(dst, 'w') as f:
         json.dump(all_answers, open(dst, 'w'))

@@ -153,6 +153,7 @@ class MovaMetaForCausalLM(ABC):
         else:
             image_features = self.get_model().get_vision_tower()(images)
             cached_features = None
+        
         if isinstance(self.get_model().mm_projector, nn.Sequential):
             if isinstance(image_features, list):
                 image_features = image_features[0]

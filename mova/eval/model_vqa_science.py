@@ -124,7 +124,8 @@ def eval_model(args):
 
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
         routing_input_ids = tokenizer_image_token(routing_qs, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
-
+        # cur_prompt = <image>\n ... <image>\n text
+        # prompts = 
         prompts = [[cur_prompt.replace("<image>\n", "").lower()]]
         routing_weight_tensor = torch.Tensor([0]*7).cuda().bfloat16().unsqueeze(0)
 
